@@ -1,23 +1,35 @@
 import request from "request-promise";
-import { Headers} from "request";
-import {Url} from "url";
+import { Headers } from "request";
+import { Url } from "url";
+import Promise from "bluebird";
 
-interface HttpRquest {
+export const GET = "get";
+
+export interface HttpRequest {
   url: string | Url;
-  method?: string;
+  method: string;
   headers?: Headers;
 }
 
-export default class Http {
-  request(options: ) {
+export interface IHttp {
+  request(options: HttpRequest): Promise<object | object[]>;
+}
+
+//TODO crear un objeto que represente una repuesta vacia.
+export default class Http implements IHttp {
+  request(options: HttpRequest): Promise<object | object[]> {
     return request({
       url: options.url,
       method: options.method,
       headers: options.headers,
+      json: true,
     })
       .then(response => {
         return response;
       })
-      .catch(error => {});
+      .catch(e => {
+        console.error(e);
+        throw e;
+      });
   }
 }
