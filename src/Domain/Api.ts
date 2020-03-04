@@ -1,15 +1,15 @@
-import Http, {IHttp} from "../Infrastructure/Http";
+import Http, { IHttp } from "../Infrastructure/Http";
 import _ from "lodash";
 
 export interface IApiRequest {
-  method: string,
-  path: string | string[],
-  params: Object
+  method: string;
+  path: string | string[];
+  params: Object;
 }
 
 export default class Api {
   protected readonly _adapter: IHttp;
-  protected readonly _domain: string = '';
+  protected readonly _domain: string = "";
 
   get adapter(): IHttp {
     return this._adapter;
@@ -34,16 +34,22 @@ export default class Api {
   }
 
   protected getUrl(path: string | string[], params: Object): string {
-    const urlBase: string = [this.domain, ...path].join('/');
+    if (_.isString(path) && !_.isArray(path)) {
+      path = [path];
+    }
+    const urlBase: string = [this.domain, ...path].join("/");
     const urlParams: string = _.keys(params)
       .map(key => {
         let param = _.get(params, key);
         if (_.isObject(param)) {
-          param = param ? JSON.stringify(param) : '';
+          param = param ? JSON.stringify(param) : "";
         }
         return `${encodeURIComponent(key)}=${encodeURIComponent(param)}`;
       })
-      .join('&');
-    return urlBase + "?" + urlParams;
+      .join("&");
+
+    return _.isArray(urlParams) && urlParams.length > 0
+        ? urlBase + "?" + urlParams
+        : urlBase;
   }
 }
