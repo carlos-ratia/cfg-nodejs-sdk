@@ -1,11 +1,8 @@
-import Http, { IHttp } from "../Infrastructure/Http";
+import Http from "../Infrastructure/Http";
 import _ from "lodash";
-
-export interface IApiRequest {
-  method: string;
-  path: string | string[];
-  params: Object;
-}
+import { IApiRequest } from "./IApiRequest";
+import { IApiResponse } from "./IApiResponse";
+import { IHttp } from "../Infrastructure/IHttp";
 
 export default class Api {
   protected readonly _adapter: IHttp;
@@ -18,6 +15,7 @@ export default class Api {
   get domain(): string {
     return this._domain;
   }
+
   protected constructor(adapter?: IHttp) {
     if (!_.isUndefined(adapter)) {
       this._adapter = new Http();
@@ -26,11 +24,20 @@ export default class Api {
     }
   }
 
-  request(options: IApiRequest): Promise<object | object[]> {
-    return this.adapter.request({
-      url: this.getUrl(options.path, options.params),
-      method: options.method,
-    });
+  request(options: IApiRequest): Promise<IApiResponse> {
+    return this.adapter
+      .request({
+        url: this.getUrl(options.path, options.params),
+        method: options.method,
+      })
+      .then(response => {
+        return {
+          statusCode: this.getStatusCodeFromResponse(response),
+          data: this.getDataCodeFromResponse(response),
+          debug: this.getDebugFromResponse(response),
+          error: this.getErrorFromResponse(response),
+        };
+      });
   }
 
   protected getUrl(path: string | string[], params: Object): string {
@@ -49,7 +56,46 @@ export default class Api {
       .join("&");
 
     return _.isArray(urlParams) && urlParams.length > 0
-        ? urlBase + "?" + urlParams
-        : urlBase;
+      ? urlBase + "?" + urlParams
+      : urlBase;
+  }
+
+  private getStatusCodeFromResponse(response: object) {
+    let status: string =
+      _.has(response, "statusCode") &&
+      _.isInteger(_.get(response, "statusCode"))
+        ? _.get(response, "statusCode")
+        : 0;
+    return status;
+  }
+
+  private getDataCodeFromResponse(response: object): Object[] {
+    if (!_.has(response, "data")) {
+      return [];
+    }
+    const data = _.get(response, "data");
+    if (_.isArray(data)) {
+      return data;
+    } else if (_.isObject(data)) {
+      return [data];
+    } else {
+      return [];
+    }
+  }
+
+  private getDebugFromResponse(response: object): Object[] {
+    let debug: Object[] =
+      _.has(response, "debug") && _.isObject(_.get(response, "debug"))
+        ? _.get(response, "debug")
+        : 0;
+    return debug;
+  }
+
+  private getErrorFromResponse(response: object) {
+    let error: object =
+      _.has(response, "error") && _.isObject(_.get(response, "error"))
+        ? _.get(response, "error")
+        : 0;
+    return error;
   }
 }

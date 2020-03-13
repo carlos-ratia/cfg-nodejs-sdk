@@ -33,7 +33,11 @@ export class Cfg {
         params: {},
       })
       .then(response => {
+        console.log(response);
         return response;
+      })
+      .catch(e => {
+        console.error(e);
       });
   }
 }

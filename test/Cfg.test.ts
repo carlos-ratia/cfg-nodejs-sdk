@@ -7,6 +7,6 @@ describe("Cfg Test", () => {
 
     const cfg = new Cfg(client, service);
 
-    console.log(await cfg.get());
+    console.log(cfg.get());
   });
 });
